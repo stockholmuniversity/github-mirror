@@ -1,0 +1,9 @@
+{
+  "baseMirrorDir": "/path/to/github/nirrors",
+  "mirrors": [
+    {
+      "url": "git://github.com/stockholmuniversity/github-mirror.git",
+      "name": "github-mirror"
+    }
+  ]
+}
