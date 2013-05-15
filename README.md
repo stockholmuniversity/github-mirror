@@ -1,4 +1,4 @@
-gitmirror
-=========
+github-mirror
+=============
 
-A web server to receive webhooks and mirror git repos written in groovy.
+A groovy script to update github mirrors with an embedded web server to receive webhooks.
