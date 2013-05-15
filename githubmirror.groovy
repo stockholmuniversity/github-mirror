@@ -38,19 +38,21 @@
  */
 
 import groovy.json.JsonSlurper
+import org.apache.commons.net.util.SubnetUtils
 import org.jboss.netty.handler.codec.http.QueryStringDecoder
 import org.vertx.groovy.core.Vertx
 import org.vertx.groovy.core.buffer.Buffer
 import org.vertx.groovy.core.http.HttpServerRequest
 
 @Grapes([
-  @Grab(group = 'org.vert-x', module = 'vertx-lang-groovy', version = '1.3.1.final')
+  @Grab(group = 'org.vert-x', module = 'vertx-lang-groovy', version = '1.3.1.final'),
+  @Grab(group = 'commons-net', module = 'commons-net', version = '3.2')
 ])
 
 
 def startServer(int port, config) {
   def vertx = Vertx.newVertx("localhost")
-  def eb = vertx.eventBus
+  def eventBus = vertx.eventBus
 
   vertx.createHttpServer().requestHandler { HttpServerRequest request ->
 
@@ -58,27 +60,60 @@ def startServer(int port, config) {
     request.dataHandler { buffer -> body << buffer }
 
     request.endHandler {
-       // TODO Restrict requests to specific ip-addresses/ranges
+      String remoteIp = request.toJavaRequest().conn.channel.remoteAddress.hostString
+      if (!isRemoteIpAllowed(remoteIp, config.ipAddressRestrictions)) {
+        println "Http-request from ${remoteIp} is not allowed!"
+        request.response.close()
+        return
+      }
 
       QueryStringDecoder qsd = new QueryStringDecoder(body.toString(), false);
-      Map bodyParams = qsd.getParameters();
+      Map postParams = qsd.getParameters();
 
       request.response.putHeader("Content-Type", "text/plain")
       request.response.end("Ok, thanks!")
 
-      def json = new JsonSlurper().parseText(bodyParams.payload)
-      println "payload=${json}"
+      String payload = postParams?.payload?.get(0)
+      def json = new JsonSlurper().parseText(payload)
 
-      // TODO Use json payload to determine which mirror to update and pass it in message
-      eb.publish("mirror.update", null)
+      println "Webhook request recieved for github repo: ${json?.repository?.name} with url: ${json?.repository?.url}"
+
+      eventBus.publish("mirrors.update", getMirrorNamesForGithubURL(json?.repository?.url, config).join(","))
     }
 
   }.listen(port)
 
-  eb.registerHandler("mirror.update") { message ->
-    mirrorGithubRepositorys([], config)
+  eventBus.registerHandler("mirrors.update") { message ->
+    String body = message.body
+    mirrorGithubRepositorys(body.split(",") as List, config)
   }
 
+}
+
+def isRemoteIpAllowed(String remoteIp, List ipAddressRestrictions) {
+  if (!ipAddressRestrictions) return true
+
+  boolean isAllowed = false
+
+  for (restriction in ipAddressRestrictions) {
+    def subnet = (new SubnetUtils(restriction)).getInfo()
+    if (subnet.isInRange(remoteIp)) {
+      isAllowed = true
+      break
+    }
+  }
+  isAllowed
+}
+
+def getMirrorNamesForGithubURL(String githubURL, config) {
+  def (user, repo) = githubURL.split("/").getAt([-2, -1])
+  def urlSuffixes = [ "/${user}/${repo}", "/${user}/${repo}.git" ]
+
+  config.mirrors.findAll { mirror ->
+    urlSuffixes.find { mirror.url.endsWith(it) } != null
+  }.collect { mirror ->
+    mirror.name
+  }
 }
 
 def mirrorGithubRepositorys(List mirrorNames, config) {
@@ -88,7 +123,6 @@ def mirrorGithubRepositorys(List mirrorNames, config) {
     throw new IllegalArgumentException("The baseMirrorDir directory ${config.baseMirrorDir} does not exists!")
 
   List mirrorsToUpdate = mirrorNames ? config.mirrors.findAll { mirrorNames.contains(it.name) } : config.mirrors
-  println "mirrorsToUpdate=${mirrorsToUpdate}"
 
   for (mirror in mirrorsToUpdate) {
     File mirrorDir = new File(baseMirrorDir, mirror.name + ".git")
@@ -135,7 +169,6 @@ def handleArgs(String[] args) {
   def config = new JsonSlurper().parse(new FileReader(options.c))
 
   if (options.s) {
-    println "options.p=${options.p}"
     startServer(options.p ? options.p as int : 8080, config)
   }
   else {
