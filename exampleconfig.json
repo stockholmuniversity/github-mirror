@@ -1,9 +1,22 @@
 {
+  // Base directory for github mirrors
   "baseMirrorDir": "/path/to/github/nirrors",
+
+  // Array of github repos to be mirrored
   "mirrors": [
     {
       "url": "git://github.com/stockholmuniversity/github-mirror.git",
       "name": "github-mirror"
     }
+  ],
+
+  // Ip-addresses/masks which can access the webserver (githubs public ip-adresses for hooks)
+  "ipAddressRestrictions": [
+    "207.97.227.253/32",
+    "50.57.128.197/32",
+    "108.171.174.178/32",
+    "50.57.231.61/32",
+    "204.232.175.64/27",
+    "192.30.252.0/22"
   ]
 }
