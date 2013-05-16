@@ -125,22 +125,24 @@ def mirrorGithubRepositorys(List mirrorNames, config) {
   List mirrorsToUpdate = mirrorNames ? config.mirrors.findAll { mirrorNames.contains(it.name) } : config.mirrors
 
   for (mirror in mirrorsToUpdate) {
-    File mirrorDir = new File(baseMirrorDir, mirror.name + ".git")
+    String mirrorDirName = mirror.name + ".git"
+    File mirrorDir = new File(baseMirrorDir, mirrorDirName)
 
-    if (!mirrorDir.exists()) {
-      println "Creating new github mirror at ${mirrorDir.absolutePath} for url ${mirror.url}"
-      executeGitCommand("git clone --mirror ${mirror.url}", baseMirrorDir)
+    if (!mirrorDir.exists() || mirrorDir.list()?.length == 0) {
+      println "Creating new github mirror at ${mirrorDir.absolutePath}/${mirrorDirName} for url ${mirror.url}"
+      executeGitCommand("clone --mirror ${mirror.url} ${mirrorDirName}", baseMirrorDir)
     }
     else {
       println "Updating github mirror at ${mirrorDir.absolutePath} from url ${mirror.url}"
-      executeGitCommand("git fetch -q", mirrorDir)
+      executeGitCommand("fetch -q", mirrorDir)
     }
   }
 }
 
 def executeGitCommand(String command, File cwd) {
-  println "Executing git command: \"${command}\" in directory: \"${cwd}\""
-  def proc = command.execute([], cwd)
+  String gitCommand = "git ${command}"
+  println "Executing git command: \"${gitCommand}\" in directory: \"${cwd}\""
+  def proc = gitCommand.execute([], cwd)
   proc.waitForOrKill(1 * 60 * 1000) // Wait a maximum of 1 minute
 
   println "Git exited with code: ${proc.exitValue()}"
