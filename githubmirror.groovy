@@ -76,9 +76,11 @@ def startServer(int port, config) {
       String payload = postParams?.payload?.get(0)
       def json = new JsonSlurper().parseText(payload)
 
-      println "Webhook request recieved for github repo: ${json?.repository?.name} with url: ${json?.repository?.url}"
-
-      eventBus.publish("mirrors.update", getMirrorNamesForGithubURL(json?.repository?.url, config).join(","))
+      List mirrorNames = getMirrorNamesForGithubURL(json?.repository?.url, config)
+      if (mirrorNames) {
+        println "Webhook request recieved for github repo: ${json?.repository?.name} with url: ${json?.repository?.url}"
+        eventBus.publish("mirrors.update", mirrorNames.join(","))
+      }
     }
 
   }.listen(port)
