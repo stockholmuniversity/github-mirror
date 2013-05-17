@@ -10,7 +10,7 @@
     }
   ],
 
-  // Ip-addresses/masks which can access the webserver (githubs public ip-adresses for hooks)
+  // Ip-addresses/masks which can access the webserver (githubs public ip-adresses for webhooks)
   "ipAddressRestrictions": [
     "207.97.227.253/32",
     "50.57.128.197/32",
