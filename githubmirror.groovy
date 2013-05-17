@@ -50,7 +50,7 @@ import org.vertx.groovy.core.http.HttpServerRequest
 ])
 
 
-def startServer(int port, config) {
+def startServer(int port, configClosure) {
   def vertx = Vertx.newVertx("localhost")
   def eventBus = vertx.eventBus
 
@@ -60,6 +60,7 @@ def startServer(int port, config) {
     request.dataHandler { buffer -> body << buffer }
 
     request.endHandler {
+      def config = configClosure()
       String remoteIp = request.toJavaRequest().conn.channel.remoteAddress.hostString
       if (!isRemoteIpAllowed(remoteIp, config.ipAddressRestrictions)) {
         println "Http-request from ${remoteIp} is not allowed!"
@@ -76,10 +77,13 @@ def startServer(int port, config) {
       String payload = postParams?.payload?.get(0)
       def json = new JsonSlurper().parseText(payload)
 
+      println "Webhook request recieved for github repo: ${json?.repository?.name} with url: ${json?.repository?.url}"
       List mirrorNames = getMirrorNamesForGithubURL(json?.repository?.url, config)
       if (mirrorNames) {
-        println "Webhook request recieved for github repo: ${json?.repository?.name} with url: ${json?.repository?.url}"
         eventBus.publish("mirrors.update", mirrorNames.join(","))
+      }
+      else {
+        println "No mirror is configured for github repo: ${json?.repository?.name} with url: ${json?.repository?.url}"
       }
     }
 
@@ -87,7 +91,7 @@ def startServer(int port, config) {
 
   eventBus.registerHandler("mirrors.update") { message ->
     String body = message.body
-    mirrorGithubRepositorys(body.split(",") as List, config)
+    mirrorGithubRepositorys(body.split(",") as List, configClosure())
   }
 
 }
@@ -170,13 +174,15 @@ def handleArgs(String[] args) {
     return
   }
 
-  def config = new JsonSlurper().parse(new FileReader(options.c))
+  def config = { ->
+    new JsonSlurper().parse(new FileReader(options.c))
+  }
 
   if (options.s) {
     startServer(options.p ? options.p as int : 8080, config)
   }
   else {
-    mirrorGithubRepositorys(options.arguments() ?: [], config)
+    mirrorGithubRepositorys(options.arguments() ?: [], config())
   }
 
 }
