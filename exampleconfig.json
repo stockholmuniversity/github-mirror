@@ -5,7 +5,7 @@
   // Array of github repos to be mirrored
   "mirrors": [
     {
-      "url": "git://github.com/stockholmuniversity/github-mirror.git",
+      "url": "https://github.com/stockholmuniversity/github-mirror",
       "name": "github-mirror"
     }
   ],
