@@ -1,11 +1,11 @@
 {
   // Base directory for github mirrors
-  "baseMirrorDir": "/path/to/github/nirrors",
+  "baseMirrorDir": "/path/to/github/mirrors",
 
   // Array of github repos to be mirrored
   "mirrors": [
     {
-      "url": "git://github.com/stockholmuniversity/github-mirror.git",
+      "url": "https://github.com/stockholmuniversity/github-mirror",
       "name": "github-mirror"
     }
   ],
