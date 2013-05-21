@@ -1,6 +1,6 @@
 {
   // Base directory for github mirrors
-  "baseMirrorDir": "/path/to/github/nirrors",
+  "baseMirrorDir": "/path/to/github/mirrors",
 
   // Array of github repos to be mirrored
   "mirrors": [
