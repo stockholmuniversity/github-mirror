@@ -55,18 +55,19 @@ def startServer(int port, configClosure) {
   def eventBus = vertx.eventBus
 
   vertx.createHttpServer().requestHandler { HttpServerRequest request ->
+    def config = configClosure()
+
+    String remoteIp = request.toJavaRequest().conn.channel.remoteAddress.hostString
+    if (!isRemoteIpAllowed(remoteIp, config.ipAddressRestrictions)) {
+      println "Http-request from ${remoteIp} is not allowed!"
+      request.response.close()
+      return
+    }
 
     def body = new Buffer()
     request.dataHandler { buffer -> body << buffer }
 
     request.endHandler {
-      def config = configClosure()
-      String remoteIp = request.toJavaRequest().conn.channel.remoteAddress.hostString
-      if (!isRemoteIpAllowed(remoteIp, config.ipAddressRestrictions)) {
-        println "Http-request from ${remoteIp} is not allowed!"
-        request.response.close()
-        return
-      }
 
       QueryStringDecoder qsd = new QueryStringDecoder(body.toString(), false);
       Map postParams = qsd.getParameters();
