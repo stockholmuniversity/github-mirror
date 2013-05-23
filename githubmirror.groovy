@@ -136,17 +136,17 @@ def mirrorGithubRepositorys(List mirrorNames, config) {
 
     if (!mirrorDir.exists() || mirrorDir.list()?.length == 0) {
       println "Creating new github mirror at ${mirrorDir.absolutePath}/${mirrorDirName} for url ${mirror.url}"
-      executeGitCommand("clone --mirror ${mirror.url} ${mirrorDirName}", baseMirrorDir)
+      executeGitCommand("clone --mirror ${mirror.url} ${mirrorDirName}", baseMirrorDir, config.wrapper)
     }
     else {
       println "Updating github mirror at ${mirrorDir.absolutePath} from url ${mirror.url}"
-      executeGitCommand("fetch -q", mirrorDir)
+      executeGitCommand("fetch -q", mirrorDir, config.wrapper)
     }
   }
 }
 
-def executeGitCommand(String command, File cwd) {
-  String gitCommand = "git ${command}"
+def executeGitCommand(String command, File cwd, String wrapper) {
+  String gitCommand = "${wrapper} git ${command}".trim()
   println "Executing git command: \"${gitCommand}\" in directory: \"${cwd}\""
   def proc = gitCommand.execute([], cwd)
   proc.waitForOrKill(1 * 60 * 1000) // Wait a maximum of 1 minute
