@@ -146,7 +146,7 @@ def mirrorGithubRepositorys(List mirrorNames, config) {
 }
 
 def executeGitCommand(String command, File cwd, String wrapper) {
-  String gitCommand = "${wrapper} git ${command}".trim()
+  String gitCommand = "${wrapper?:''} git ${command}".trim()
   println "Executing git command: \"${gitCommand}\" in directory: \"${cwd}\""
   def proc = gitCommand.execute([], cwd)
   proc.waitForOrKill(10 * 60 * 1000) // Wait a maximum of 10 minutes
