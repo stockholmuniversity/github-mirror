@@ -149,7 +149,7 @@ def executeGitCommand(String command, File cwd, String wrapper) {
   String gitCommand = "${wrapper} git ${command}".trim()
   println "Executing git command: \"${gitCommand}\" in directory: \"${cwd}\""
   def proc = gitCommand.execute([], cwd)
-  proc.waitForOrKill(1 * 60 * 1000) // Wait a maximum of 1 minute
+  proc.waitForOrKill(10 * 60 * 1000) // Wait a maximum of 1 minute
 
   println "Git exited with code: ${proc.exitValue()}"
   String stderr = proc.err.text
