@@ -114,10 +114,9 @@ def isRemoteIpAllowed(String remoteIp, List ipAddressRestrictions) {
 
 def getMirrorNamesForGithubURL(String githubURL, config) {
   def (user, repo) = githubURL.split("/").getAt([-2, -1])
-  def urlSuffixes = [ "/${user}/${repo}", "/${user}/${repo}.git" ]
 
   config.mirrors.findAll { mirror ->
-    urlSuffixes.find { mirror.url.endsWith(it) } != null
+    mirror.url ==~ ".*[/:]${user}/${repo}.git\$"
   }.collect { mirror ->
     mirror.name
   }
