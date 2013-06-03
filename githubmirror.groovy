@@ -56,6 +56,15 @@ def startServer(int port, configClosure) {
 
   vertx.createHttpServer().requestHandler { HttpServerRequest request ->
     def config = configClosure()
+    if (!config) {
+      request.response.with {
+        statusCode = 500
+        String message = "Bad config"
+        statusMessage = message
+        end(message)
+      }
+      return
+    }
 
     String remoteIp = request.toJavaRequest().conn.channel.remoteAddress.hostString
     if (!isRemoteIpAllowed(remoteIp, config.ipAddressRestrictions)) {
@@ -175,7 +184,17 @@ def handleArgs(String[] args) {
   }
 
   def config = { ->
-    new JsonSlurper().parse(new FileReader(options.c))
+    try {
+      return new JsonSlurper().parse(new FileReader(options.c))
+    }
+    catch (e) {
+      println "Bad config: ${e.message}"
+    }
+    null
+  }
+
+  if (!config()) {
+    System.exit(1)
   }
 
   if (options.s) {
