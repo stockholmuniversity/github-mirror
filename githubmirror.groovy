@@ -61,6 +61,7 @@ def startServer(int port, configClosure) {
         statusCode = 500
         String message = "Bad config"
         statusMessage = message
+        putHeader("Content-Type", "text/plain")
         end(message)
       }
       return
@@ -70,6 +71,14 @@ def startServer(int port, configClosure) {
     if (!isRemoteIpAllowed(remoteIp, config.ipAddressRestrictions)) {
       println "Http-request from ${remoteIp} is not allowed!"
       request.response.close()
+      return
+    }
+
+    if (request.path == "/checkConfig") {
+      request.response.with {
+        putHeader("Content-Type", "text/plain")
+        end("Good config")
+      }
       return
     }
 
