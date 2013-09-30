@@ -158,8 +158,8 @@ def mirrorGithubRepositorys(List mirrorNames, config) {
     }
     else {
       println "Updating github mirror at ${mirrorDir.absolutePath} from url ${mirror.url}"
-      // Fetch using prune to clean branch tracking and with tags to update tag tracking.
-      executeGitCommand("fetch -p -t -q", mirrorDir, mirror.wrapper ?: config.wrapper)
+      // Since it is a mirror we likely want to update using remote update and adding prune to delete stale tags and branches
+      executeGitCommand("remote update --prune", mirrorDir, mirror.wrapper ?: config.wrapper)
     }
   }
 }
