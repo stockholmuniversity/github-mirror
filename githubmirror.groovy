@@ -158,7 +158,7 @@ def mirrorGithubRepositorys(List mirrorNames, config) {
     }
     else {
       println "Updating github mirror at ${mirrorDir.absolutePath} from url ${mirror.url}"
-      executeGitCommand("fetch -q", mirrorDir, mirror.wrapper ?: config.wrapper)
+      executeGitCommand("remote update --prune", mirrorDir, mirror.wrapper ?: config.wrapper)
     }
   }
 }
