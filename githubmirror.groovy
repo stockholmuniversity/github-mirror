@@ -207,7 +207,7 @@ def handleArgs(String[] args) {
   }
 
   if (options.s) {
-    startServer(options.p ? options.p as int : 8080, config)
+    startServer(options.p ? options.p as int : 8081, config)
   }
   else {
     mirrorGithubRepositorys(options.arguments() ?: [], config())
